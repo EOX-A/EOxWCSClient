@@ -407,8 +407,8 @@ class wcsClient(object):
         http_request = self.create_request(input_params, procedure_dict)
         print http_request
         print type(http_request)
-        from IPython import embed  
-        embed()  
+#        from IPython import embed  
+#        embed()  
 
         if input_params.has_key('IDs_only') and input_params['IDs_only'] == True:
             result_list = wcsClient.execute_xml_request(self, http_request, IDs_only=True)
@@ -509,6 +509,9 @@ class wcsClient(object):
         """
             execute the GetCoverage request(s)
         """
+        print 'XXX', http_request
+        print type(http_request)
+
         now = time.strftime('_%Y%m%dT%H%M%S')
         if input_params.has_key('output'):
             outfile = input_params['output']+dsep+input_params['coverageID'][:-4]+now+input_params['coverageID'][-4:]
@@ -526,6 +529,7 @@ class wcsClient(object):
                 os.fsync(file_getcov.fileno())
                 file_getcov.close()
                 request_handle.close()
+                return status
     
             except IOError as (errno, strerror):
                 print "I/O error({0}): {1}".format(errno, strerror)
@@ -544,7 +548,7 @@ class wcsClient(object):
         except TypeError:
             pass
 
-        return status
+        return #status
         
         
     #/************************************************************************/
@@ -563,13 +567,14 @@ class wcsClient(object):
                 continue
             request_dict[k] = str(procedure_dict[k])+str(v)
 
-        print len(request_dict)
+#        print len(request_dict)
 
             # get the basic request settings 
         base_request = self.set_base_request()
         request_dict.update(base_request)
 
-        print len(request_dict)
+#        print len(request_dict)
+#        print input_params['coverageID']
     
     
         return request_dict
@@ -904,21 +909,21 @@ if __name__ == "__main__":
 # (1b): corresponding http-request
 # http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&request=GetCoverage&version=2.0.1&coverageid=FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326%2828,30%29&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326%2859,61%29&format=image/jpeg
 # (1c)
-#  input_params1={'server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?',    }
+#  input_params1={'request': 'GetCoverage','server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?',  'coverageid': 'FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif', 'subset_x': '28,30','subset_y': '59,61', 'format': 'jpeg'}
 #
 # (2a):
-# ./wcs_client.py  DescribeEOCoverageSet -s http://neso.cryoland.enveo.at/cryoland/ows?  --eoID daily_FSC_PanEuropean_Optical --subset_lat 32,44  --subset_lon 11,33  --subset_time  2012-03-17,2012-03-19T12:00:00Z    -- IDs_only
+# ./wcs_client.py  DescribeEOCoverageSet -s http://neso.cryoland.enveo.at/cryoland/ows?  --eoID daily_FSC_PanEuropean_Optical --subset_lat 59,61  --subset_lon 28,30  --subset_time  2012-03-17,2012-03-19T12:00:00Z    -- IDs_only
 # (2b): 
-# http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&version=2.0.0&request=describeeocoverageset&eoid=daily_FSC_PanEuropean_Optical&subset=phenomenonTime(%222012-03-17%22,%222012-03-19T12:00:00Z%22)&subset=Lat,http://www.opengis.net/def/crs/EPSG/0/4326(32,44)&subset=Long,http://www.opengis.net/def/crs/EPSG/0/4326(11,33)
+# http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&version=2.0.0&request=describeeocoverageset&eoid=daily_FSC_PanEuropean_Optical&subset=phenomenonTime(%222012-03-17%22,%222012-03-19T12:00:00Z%22)&subset=Lat,http://www.opengis.net/def/crs/EPSG/0/4326(59,61)&subset=Long,http://www.opengis.net/def/crs/EPSG/0/4326(28,30)
 # (2c)
-#  input_params2={'request': 'DescribeEOCoverageSet', 'server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?' , 'eoID': 'daily_FSC_PanEuropean_Optical', 'subset_x' :'11,33', 'subset_y': '32,44' , 'subset_time':  '2012-03-17,2012-03-19T12:00:00Z' ,   'IDs_only':True}
+#  input_params2={'request': 'DescribeEOCoverageSet', 'server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?' , 'eoID': 'daily_FSC_PanEuropean_Optical', 'subset_x' :'28,30', 'subset_y': '59,61' , 'subset_time':  '2012-03-17,2012-03-19T12:00:00Z' ,   'IDs_only':True}
 #
 #(3a) 
 #
 #(3b)
 #
 #(3c)
-# input_params3={'request': 'GetCoverage','server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?', 'output':'/home/schillerc/cs_pylib/wcs_client', 'coverageID': elem, 'subset_x' :'11,33', 'subset_y': '32,44', 'format': 'tiff' }
+# input_params3={'request': 'GetCoverage','server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?', 'output':'/home/schillerc/cs_pylib/wcs_client', 'coverageID': elem, 'subset_x' :'28,30', 'subset_y': '59,61', 'format': 'tiff' }
 
 
 ###############################################
