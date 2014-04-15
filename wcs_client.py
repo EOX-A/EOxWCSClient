@@ -405,6 +405,10 @@ class wcsClient(object):
         
         procedure_dict = self.set_base_desceocoverageset()
         http_request = self.create_request(input_params, procedure_dict)
+        print http_request
+        print type(http_request)
+        from IPython import embed  
+        embed()  
 
         if input_params.has_key('IDs_only') and input_params['IDs_only'] == True:
             result_list = wcsClient.execute_xml_request(self, http_request, IDs_only=True)
@@ -467,9 +471,13 @@ class wcsClient(object):
         """
         print "I'm in "+sys._getframe().f_code.co_name
 
+        print http_request
+        print type(http_request)
+
         try:
                 # access the url
             request_handle = urllib2.urlopen(http_request)
+#            status = request_handle.code
                 # read the content of the url
             result_xml = request_handle.read()
 
@@ -480,6 +488,7 @@ class wcsClient(object):
                 return cids
             else:
                 request_handle.close()
+                return result_xml
             
         except urllib2.URLError, url_ERROR:
             if hasattr(url_ERROR, 'reason'):
@@ -489,8 +498,8 @@ class wcsClient(object):
                 err_msg = str(url_ERROR.code)+'--'+url_ERROR.read()
                 return err_msg
                 
-        
-        return result_xml
+        return
+        #return result_xml
 
     #/************************************************************************/
     #/*                               execute_getcov_request()                           */
@@ -507,16 +516,16 @@ class wcsClient(object):
             outfile = temp_storage+dsep+input_params['coverageID']
         
         try:
-            res_getcov = urllib2.urlopen(http_request)
-            status = res_getcov.code
+            request_handle = urllib2.urlopen(http_request)
+            status = request_handle.code
             
             try:
                 file_getcov = open(outfile, 'w+b')
-                file_getcov.write(res_getcov.read())
+                file_getcov.write(request_handle.read())
                 file_getcov.flush()
                 os.fsync(file_getcov.fileno())
                 file_getcov.close()
-                res_getcov.close()
+                request_handle.close()
     
             except IOError as (errno, strerror):
                 print "I/O error({0}): {1}".format(errno, strerror)
@@ -894,12 +903,24 @@ if __name__ == "__main__":
 # -subset_x 28,30 -subset_y 59,61 -format jpeg 
 # (1b): corresponding http-request
 # http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&request=GetCoverage&version=2.0.1&coverageid=FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326%2828,30%29&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326%2859,61%29&format=image/jpeg
+# (1c)
+#  input_params1={'server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?',    }
 #
 # (2a):
 # ./wcs_client.py  DescribeEOCoverageSet -s http://neso.cryoland.enveo.at/cryoland/ows?  --eoID daily_FSC_PanEuropean_Optical --subset_lat 32,44  --subset_lon 11,33  --subset_time  2012-03-17,2012-03-19T12:00:00Z    -- IDs_only
 # (2b): 
 # http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&version=2.0.0&request=describeeocoverageset&eoid=daily_FSC_PanEuropean_Optical&subset=phenomenonTime(%222012-03-17%22,%222012-03-19T12:00:00Z%22)&subset=Lat,http://www.opengis.net/def/crs/EPSG/0/4326(32,44)&subset=Long,http://www.opengis.net/def/crs/EPSG/0/4326(11,33)
+# (2c)
+#  input_params2={'request': 'DescribeEOCoverageSet', 'server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?' , 'eoID': 'daily_FSC_PanEuropean_Optical', 'subset_x' :'11,33', 'subset_y': '32,44' , 'subset_time':  '2012-03-17,2012-03-19T12:00:00Z' ,   'IDs_only':True}
 #
+#(3a) 
+#
+#(3b)
+#
+#(3c)
+# input_params3={'request': 'GetCoverage','server_url': 'http://neso.cryoland.enveo.at/cryoland/ows?', 'output':'/home/schillerc/cs_pylib/wcs_client', 'coverageID': elem, 'subset_x' :'11,33', 'subset_y': '32,44', 'format': 'tiff' }
+
+
 ###############################################
 
 
