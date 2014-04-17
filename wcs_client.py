@@ -195,30 +195,49 @@ def do_print_flist(name, a_list):
         f_cnt += 1
 
 
-#/************************************************************************/
-#/*                           do_print_flist()                           */
-#/************************************************************************/
-
-def validate_date(indate):
-    """
-        validate the input date and date format
-    """
-    print "I'm in "+sys._getframe().f_code.co_name
-    
-    try:
-        parsed = time.strptime(indate, "%Y-%m-%d")
-
-    except ValueError as e:
-        err_code = 101
-        err_msg = "[Error] - Wrong input date format OR invalid date (Format should be: 2013-05-08) => {0}".format(e)
-        handle_error(err_msg, err_code)
-
-    else:
-        return parsed[:3]
  
 #/************************************************************************/
-#/*                           ()                           */
+#/*                       valid_time_wrapper()                           */
 #/************************************************************************/
+def valid_time_wrapper(indate_list):
+    """
+        
+    """
+    print "I'm in "+sys._getframe().f_code.co_name
+
+    def validate_date(indate):
+        """
+            
+        """
+        if indate.endswith('Z'):
+            testdate = indate[:-1]
+        else:
+            testdate = indate
+            if len(indate) == 16 or len(indate) ==19:
+                indate = indate+'Z'
+        
+        dateformat = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H", "%Y-%m-%dT", "%Y-%m-%d"]
+
+        format = dateformat.__iter__()
+        cnt = format.next()
+        while True:
+            try:
+                time.strptime(testdate, cnt)
+                return indate
+            except ValueError:
+                try:
+                    cnt = format.next()
+                except StopIteration:
+#                    msg = "Could not parse date: ", testdate
+#                    return msg
+#                    break
+                    raise ValueError("Could not parse date: ", testdate)
+
+
+    outdate = []
+    for elem in indate_list:
+        outdate.append(validate_date(elem))
+    return outdate
 
 
 
@@ -249,6 +268,50 @@ class wcsClient(object):
         pass
 
 
+    #/************************************************************************/
+    #/*                       valid_time_wrapper()                           */
+    #/************************************************************************/
+    def valid_time_wrapper(self,indate_list):
+        """
+            
+        """
+        print "I'm in "+sys._getframe().f_code.co_name
+    
+   
+    
+        outdate = []
+        for elem in indate_list:
+            outdate.append(self.validate_date(elem))
+        return outdate
+    
+    def validate_date(self,indate):
+        """
+            
+        """
+        if indate.endswith('Z'):
+            testdate = indate[:-1]
+        else:
+            testdate = indate
+            if len(indate) == 16 or len(indate) ==19:
+                indate = indate+'Z'
+        
+        dateformat = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H", "%Y-%m-%dT", "%Y-%m-%d"]
+
+        format = dateformat.__iter__()
+        cnt = format.next()
+        while True:
+            try:
+                time.strptime(testdate, cnt)
+                return indate
+            except ValueError:
+                try:
+                    cnt = format.next()
+                except StopIteration:
+#                    msg = "Could not parse date: ", testdate
+#                    return msg
+#                    break
+                    raise ValueError("Could not parse date - either date not valid or date not in ISO-8601 format : ", testdate)
+ 
     #/************************************************************************/
     #/*                             set_base_request()                           */
     #/************************************************************************/
@@ -315,8 +378,8 @@ class wcsClient(object):
         set_base_desceocoverageset= {'request': '&request=',
             'server_url': '' ,
             'eoID': '&eoID=' ,
-            'subset_x': '&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
-            'subset_y': '&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
+            'subset_lon': '&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
+            'subset_lat': '&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
             'subset_time': '&subset=phenomenonTime(%22',
             'containment': '&containment=',
             'section': '&section=', 
@@ -402,14 +465,20 @@ class wcsClient(object):
             
         """
         print "I'm in "+sys._getframe().f_code.co_name
-        
+            # validate that the provided date/time stings are in ISO8601
+        print input_params.get('subset_time')
+        res_in = self.valid_time_wrapper(list(input_params.get('subset_time').split(',')))
+        input_params['subset_time']=','.join(res_in)
+
         procedure_dict = self.set_base_desceocoverageset()
         http_request = self.create_request(input_params, procedure_dict)
+
         print http_request
-        print type(http_request)
+ #       print type(http_request)
 #        from IPython import embed  
 #        embed()  
-
+        sys.exit()
+        
         if input_params.has_key('IDs_only') and input_params['IDs_only'] == True:
             result_list = wcsClient.execute_xml_request(self, http_request, IDs_only=True)
         else:
@@ -472,7 +541,7 @@ class wcsClient(object):
         print "I'm in "+sys._getframe().f_code.co_name
 
         print http_request
-        print type(http_request)
+#        print type(http_request)
 
         try:
                 # access the url
@@ -510,7 +579,7 @@ class wcsClient(object):
             execute the GetCoverage request(s)
         """
         print 'XXX', http_request
-        print type(http_request)
+        #print type(http_request)
 
         now = time.strftime('_%Y%m%dT%H%M%S')
         if input_params.has_key('output'):
@@ -683,6 +752,7 @@ def get_cmdline(args):
             print 'Option','%r' % (option_string)
             print 'Dest', self.dest
     
+
     class reformat_outsize(argparse.Action):
         def __call__(self,cl_parser,namespace,  values, option_string=None):
             out=''
@@ -697,11 +767,20 @@ def get_cmdline(args):
 #    class chk_coord(argparse.Action):
 #        def __call__(self,cl_parser,namespace,  values, option_string=None):
 #            pass
+
+
 #            
-#    class chk_time(argparse.Action):
-#        def __call__(self,cl_parser,namespace,  values, option_string=None):
-#            pass
-#        
+    class chk_time(argparse.Action):
+        def __call__(self,cl_parser,namespace,  values, option_string=None):
+            items = values.split(',')
+            if len(items) == 1:
+                out=items[0]+','+items[0]
+            elif len(values) < 1:
+                raise argparse.ArgumentError
+            else:
+                out=",".join(items)
+            setattr(namespace, self.dest, out)
+        
 #    class chk_CRS(argparse.Action):
 #        def __call__(self,cl_parser,namespace,  values, option_string=None):
 #           pass
@@ -711,7 +790,13 @@ def get_cmdline(args):
             out=",".join(values)
             setattr(namespace, self.dest, out)
            
-            
+
+        # workaround -> this is needed to handle negativ input values (eg. for coordinates)
+        # otherwise argparser would interpret them as arguments
+    for i, arg in enumerate(sys.argv):
+        if (arg[0] == '-') and arg[1].isdigit(): sys.argv[i] = ' ' + arg 
+
+
 
         # Common to all subparsers
     common_parser = argparse.ArgumentParser(add_help=False, version='%(prog)s'+':   '+ __version__)
@@ -768,18 +853,17 @@ def get_cmdline(args):
 
         # Optional parameters
 ## TODO - need some check here for the the coordinates
-    desceocov_parser.add_argument('--subset_lat', metavar='subset_lat', dest='subset_y', #action=chk_coord, 
+    desceocov_parser.add_argument('--subset_lat', metavar='subset_lat', dest='subset_lat',  
                         help='Allows to constrain the request in Lat-dimensions. \
                         The spatial constraint is expressed in WGS84. ')
 
-    desceocov_parser.add_argument('--subset_lon', metavar='subset_lon', dest='subset_x', #action=chk_coord,
+    desceocov_parser.add_argument('--subset_lon', metavar='subset_lon', dest='subset_lon', 
                         help='Allows to constrain the request in Lon-dimensions. \
                         The spatial constraint is expressed in WGS84. ')
 
-    desceocov_parser.add_argument('--subset_time', metavar='subset_time_interval', # action=chk_time,
+    desceocov_parser.add_argument('--subset_time', metavar='subset_Start,subset_End',  action=chk_time,
                         help='Allows to constrain the request in Time-dimensions. The temporal \
-                        constraint (Start,End) is expressed in ISO-8601 \
-                        (e.g. -subset_time 2007-04-05T14:30Z,2007-04-07T23:59Z). ')
+                        constraint is expressed in ISO-8601 (e.g. -subset_time 2007-04-05T14:30Z,2007-04-07T23:59Z). ')
 
     desceocov_parser.add_argument('--containment', choices=['overlaps','contains'])
 
@@ -852,7 +936,8 @@ def get_cmdline(args):
                         per default EPSG 4326 is assumed; use the subset parameter to crop the resulting coverage')
 
 
-    input = cl_parser.parse_args(args[1:])
+    #input = cl_parser.parse_args(args[1:])
+    input = cl_parser.parse_args()
     input_params=input.__dict__
 
    
@@ -904,8 +989,7 @@ if __name__ == "__main__":
 # Examples: 
 #
 # (1a): cmd-line parameters
-# ./wcs_client.py  GetCoverage -s  http://neso.cryoland.enveo.at/cryoland/ows? -coverageID FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif \
-# -subset_x 28,30 -subset_y 59,61 -format jpeg 
+# ./wcs_client.py  GetCoverage -s  http://neso.cryoland.enveo.at/cryoland/ows? --coverageID FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif --subset_x 28,30 --subset_y 59,61 --format jpeg 
 # (1b): corresponding http-request
 # http://neso.cryoland.enveo.at/cryoland/ows?service=wcs&request=GetCoverage&version=2.0.1&coverageid=FSC_0.005deg_201404080650_201404081155_MOD_panEU_ENVEOV2.1.00.tif&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326%2828,30%29&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326%2859,61%29&format=image/jpeg
 # (1c)
