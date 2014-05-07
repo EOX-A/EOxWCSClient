@@ -189,7 +189,6 @@ def do_cleanup_tmp(temp_storage, cf_result, input_params):
 #/************************************************************************/
 def do_print_flist(name, a_list):
     f_cnt = 1
-#    print name, len(list), type(list)
     for elem in a_list:
         print  name, f_cnt,': ', elem
         f_cnt += 1
@@ -241,10 +240,6 @@ def valid_time_wrapper(indate_list):
 
 
 
-
-
-
-
 #/************************************************************************/
 #/************************************************************************/
 #/*                              wcsClient()                             */
@@ -271,9 +266,12 @@ class wcsClient(object):
     #/************************************************************************/
     #/*                       valid_time_wrapper()                           */
     #/************************************************************************/
+
     def valid_time_wrapper(self,indate_list):
         """
-            
+           wrapper function to _validate_date(),it handles the looping through 
+           multiple input date values
+           _validate_date() performs the actual testing, but is not intended to be called directly
         """
         print "I'm in "+sys._getframe().f_code.co_name
     
@@ -281,13 +279,21 @@ class wcsClient(object):
     
         outdate = []
         for elem in indate_list:
-            outdate.append(self.validate_date(elem))
+            outdate.append(self._validate_date(elem))
         return outdate
-    
-    def validate_date(self,indate):
+
+    #/************************************************************************/
+    #/*                          _validate_date()                            */
+    #/************************************************************************/
+   
+    def _validate_date(self,indate):
         """
-            
+            performs some testing of the supplied Date values (checks formats, validity, etc.)
+            private function of valid_time_wrapper(), which handles the looping.
+            _validate_date() is not intended to be called directly, only through the 
+            valid_time_wrapper() function.
         """
+        
         if indate.endswith('Z'):
             testdate = indate[:-1]
         else:
@@ -307,9 +313,6 @@ class wcsClient(object):
                 try:
                     cnt = format.next()
                 except StopIteration:
-#                    msg = "Could not parse date: ", testdate
-#                    return msg
-#                    break
                     raise ValueError("Could not parse date - either date not valid or date not in ISO-8601 format : ", testdate)
  
     #/************************************************************************/
@@ -378,8 +381,8 @@ class wcsClient(object):
         set_base_desceocoverageset= {'request': '&request=',
             'server_url': '' ,
             'eoID': '&eoID=' ,
-            'subset_lon': '&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
-            'subset_lat': '&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
+            'subset_lon': '&subset=Long,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
+            'subset_lat': '&subset=Lat,http://www.opengis.net/def/crs/EPSG/0/4326(' ,
             'subset_time': '&subset=phenomenonTime(%22',
             'containment': '&containment=',
             'section': '&section=', 
@@ -405,13 +408,16 @@ class wcsClient(object):
             'server_url': ''    , 
             'coverageID': '&coverageid=',  
             'format': '&format=image/',  
-            'subset_x': '&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326(',
-            'subset_y': '&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326(',  
+#            'subset_x': '&subset=x,http://www.opengis.net/def/crs/EPSG/0/4326(',
+#            'subset_y': '&subset=y,http://www.opengis.net/def/crs/EPSG/0/4326(',  
+            'subset_x': '&subset=' ,
+            'subset_y': '&subset=' ,  
             'rangesubset': '&rangesubset=', 
-            'outputcrs': '&output_crs=epsg:' ,
+            'outputcrs': '&outputcrs=http://www.opengis.net/def/crs/EPSG/0/',
+            #'outputcrs': '&outputcrs=epsg:' ,  
             'interpolation': '&interpolation=',
             'mediatype': '&mediatype=',
-            'mask': '&polygon,http://www.opengis.net/def/crs/EPSG/0/4326(',
+            'mask': '&mask=polygon,http://www.opengis.net/def/crs/EPSG/0/' ,
             'size_x': '&size=x(' ,
             'size_y': '&size=y(' ,
             'output': None }
@@ -430,12 +436,13 @@ class wcsClient(object):
             
         """
         print "I'm in "+sys._getframe().f_code.co_name
+
+        res_in = self.valid_time_wrapper(list(input_params.get('updateSequence').split(',')))
+        input_params['updateSequence']=','.join(res_in)
         
         procedure_dict = self.set_base_cap()
         http_request = self.create_request(input_params, procedure_dict)
 
-        #test_print(input_params)
-        
         return http_request
  
    
@@ -465,20 +472,16 @@ class wcsClient(object):
             
         """
         print "I'm in "+sys._getframe().f_code.co_name
+        
             # validate that the provided date/time stings are in ISO8601
-        print input_params.get('subset_time')
         res_in = self.valid_time_wrapper(list(input_params.get('subset_time').split(',')))
         input_params['subset_time']=','.join(res_in)
 
         procedure_dict = self.set_base_desceocoverageset()
         http_request = self.create_request(input_params, procedure_dict)
 
-        print http_request
- #       print type(http_request)
-#        from IPython import embed  
-#        embed()  
-        sys.exit()
-        
+        print 'ZZZ', http_request
+
         if input_params.has_key('IDs_only') and input_params['IDs_only'] == True:
             result_list = wcsClient.execute_xml_request(self, http_request, IDs_only=True)
         else:
@@ -539,9 +542,7 @@ class wcsClient(object):
             execute the generated request
         """
         print "I'm in "+sys._getframe().f_code.co_name
-
-        print http_request
-#        print type(http_request)
+        print 'YYY', http_request
 
         try:
                 # access the url
@@ -579,13 +580,18 @@ class wcsClient(object):
             execute the GetCoverage request(s)
         """
         print 'XXX', http_request
-        #print type(http_request)
 
         now = time.strftime('_%Y%m%dT%H%M%S')
-        if input_params.has_key('output'):
-            outfile = input_params['output']+dsep+input_params['coverageID'][:-4]+now+input_params['coverageID'][-4:]
+
+        if not (input_params['coverageID'].endswith('tif') or input_params['coverageID'].endswith('tiff') or \
+            input_params['coverageID'].endswith('jpeg') or input_params['coverageID'].endswith('jpg') or \
+            input_params['coverageID'].endswith('gif')):
+                out_coverageID = input_params['coverageID']+now+'.'+input_params['format']
+
+        if input_params.has_key('output') and input_params['output'] is not None:
+            outfile = input_params['output']+dsep+out_coverageID        # input_params['coverageID'][:-4]+now+input_params['coverageID'][-4:]
         else: 
-            outfile = temp_storage+dsep+input_params['coverageID']
+            outfile = temp_storage+dsep+out_coverageID                  # input_params['coverageID']
         
         try:
             request_handle = urllib2.urlopen(http_request)
@@ -632,20 +638,22 @@ class wcsClient(object):
     
         request_dict={}
         for k,v in input_params.iteritems():
+            print k,'--',v
             if v == None or v == True:
                 continue
-            request_dict[k] = str(procedure_dict[k])+str(v)
+                # create the request-dictionary but ensure there are no whitespaces left
+                # (which got inserted to handle negativ input values) 
 
-#        print len(request_dict)
+            request_dict[k] = str(procedure_dict[k])+str(v).strip()
+            from IPython import embed  
+            embed()  
+            sys.exit()
+
 
             # get the basic request settings 
         base_request = self.set_base_request()
         request_dict.update(base_request)
 
-#        print len(request_dict)
-#        print input_params['coverageID']
-    
-    
         return request_dict
 
 
@@ -705,10 +713,10 @@ class wcsClient(object):
         
         if request_dict.has_key('eoID'):
             http_request=http_request+request_dict.get('eoID')
-#        if request_dict.has_key('subset_lat'):
-#            http_request=http_request+request_dict.get('subset_lat')
-#        if request_dict.has_key('subset_lon'):
-#            http_request=http_request+request_dict.get('subset_lon')
+        if request_dict.has_key('subset_lat'):
+            http_request=http_request+request_dict.get('subset_lat')+')'
+        if request_dict.has_key('subset_lon'):
+            http_request=http_request+request_dict.get('subset_lon')+')'
         if request_dict.has_key('subset_time'):
             http_request=http_request+request_dict.get('subset_time').split(',')[0] \
                 +'%22,%22'+request_dict.get('subset_time').split(',')[1]+'%22)'
@@ -720,7 +728,6 @@ class wcsClient(object):
             http_request=http_request+request_dict.get('count')
         #if request_dict.has_key(''):
             #http_request=http_request+request_dict.get('')
-    
     
         return http_request
     
@@ -743,18 +750,22 @@ class wcsClient(object):
 def get_cmdline(args):
     """
         handles the input from the commandline, help, and usage
+        initiates some checks and reformatting of the input from the commandline
     """
     print "I'm in "+sys._getframe().f_code.co_name
-    
-    class chk_input(argparse.Action):
-        def __call__(self,cl_parser,namespace,  values, option_string=None):
-            print 'Value','%r' % (values)
-            print 'Option','%r' % (option_string)
-            print 'Dest', self.dest
-    
 
+    #---------------    
+#        # general class printing the received input -> for testing only
+#    class chk_input(argparse.Action):
+#        def __call__(self, cl_parser, namespace, values, option_string=None):
+#            print 'Value','%r' % (values)
+#            print 'Option','%r' % (option_string)
+#            print 'Dest', self.dest
+#
+    #---------------    
+        # reformats and sets the  size/resolution  parameter for the requested output-size
     class reformat_outsize(argparse.Action):
-        def __call__(self,cl_parser,namespace,  values, option_string=None):
+        def __call__(self, cl_parser, namespace, values, option_string=None):
             out=''
             if values[0].startswith('siz'):
                 out='size='+values[1]
@@ -763,15 +774,10 @@ def get_cmdline(args):
 
             setattr(namespace, self.dest, out)
 
-##TODO - add some input checking
-#    class chk_coord(argparse.Action):
-#        def __call__(self,cl_parser,namespace,  values, option_string=None):
-#            pass
-
-
-#            
+    #---------------
+        # validates and reformats the received time input
     class chk_time(argparse.Action):
-        def __call__(self,cl_parser,namespace,  values, option_string=None):
+        def __call__(self, cl_parser, namespace, values, option_string=None):
             items = values.split(',')
             if len(items) == 1:
                 out=items[0]+','+items[0]
@@ -779,26 +785,80 @@ def get_cmdline(args):
                 raise argparse.ArgumentError
             else:
                 out=",".join(items)
+
             setattr(namespace, self.dest, out)
-        
-#    class chk_CRS(argparse.Action):
-#        def __call__(self,cl_parser,namespace,  values, option_string=None):
-#           pass
-    
+
+    #---------------
+        # checks and reformats the recieved coordinates and provides the corrcet Axis syntax
+    class chk_coord(argparse.Action):
+        def __call__(self, cl_parser, namespace, values, option_string=None):
+            if values[0].startswith('epsg'):
+                crs = values[0].split(':')[1]
+                label = values[1]
+                coord = values[2]
+                out = label+',http://www.opengis.net/def/crs/EPSG/0/'+crs+'('+coord
+            elif values[0].startswith('pix') or values[0].startswith('ori'):
+                label = values[1]
+                coord = values[2]
+                out = label+'('+coord
+            else: 
+                raise argparse.ArgumentError
+                
+            setattr(namespace, self.dest, out)
+
+    #---------------
+        # some simple checks of the recieved mask values (count, start=end , etc.)
+    class chk_mask(argparse.Action):
+        def __call__(self, cl_parser,namespace, values, option_string=None):
+            print 'Values ',values
+            print 'Option', option_string
+            if values[0].startswith('epsg'):
+                coord = values[1].split(',')
+            else:
+                coord = values[0].split(',')
+            
+            print coord            
+            
+            if  len(coord) % 2 is 0:
+                if coord[0] == coord[-2] and coord[1] == coord[-1]:
+                    if values[0].startswith('epsg'):
+                        crs = values[0].split(':')[1]
+#                        out = 'polygon,http://www.opengis.net/def/crs/EPSG/0/'+crs+'('+",".join(coord)
+                        out = crs+'('+",".join(coord)
+                    else: 
+#                        out = 'polygon,http://www.opengis.net/def/crs/EPSG/0/4326('+",".join(coord)
+                        out = '4326('+",".join(coord)                        
+                else:
+                    raise ValueError('Provided Masking Polygon not closed')
+            else:
+                raise ValueError('Provided Mask coordinates are not given in pairs') 
+            
+            print out
+            from IPython import embed  
+            embed()  
+#            sys.exit()
+            
+            
+            setattr(namespace, self.dest, out)
+            
+    #---------------
+        # converts input received as  numbers/lists  to strings for further usage
     class cnv2str(argparse.Action):
-        def __call__(self,cl_parser,namespace,  values, option_string=None):
+        def __call__(self, cl_parser, namespace, values, option_string=None):
             out=",".join(values)
             setattr(namespace, self.dest, out)
            
-
+    #---------------
         # workaround -> this is needed to handle negativ input values (eg. for coordinates)
         # otherwise argparser would interpret them as arguments
     for i, arg in enumerate(sys.argv):
         if (arg[0] == '-') and arg[1].isdigit(): sys.argv[i] = ' ' + arg 
 
+    #===============
 
 
-        # Common to all subparsers
+        #  the argument parser sections
+            # Common to all subparsers
     common_parser = argparse.ArgumentParser(add_help=False, version='%(prog)s'+':   '+ __version__)
 
     cl_parser = argparse.ArgumentParser(description='WCS 2.0.1/EO-WCS Client routine', parents=[common_parser])
@@ -821,7 +881,7 @@ def get_cmdline(args):
     getcap_parser.add_argument('--sections', dest='sections', nargs='*', choices=['DatasetSeriesSummary', 'CoverageSummary', \
                         'Contents','ServiceIdentification','ServiceProvider','OperationsMetadata','Languages','All'],
                         help='request one or more section(s) of a Capabilities Document; NOTE: multiple sections need to \
-                        be supplied within {};  [default=All]', action=cnv2str)                  
+                        be supplied within {};  [default=All]', action=cnv2str)
 
 
         # ==== DescribeCoverage parameters
@@ -835,7 +895,7 @@ def get_cmdline(args):
                          required=True, help='the SERVER URL which should be contaced')
 
     mandatory.add_argument('--coverageID', metavar='coverageID', required=True, 
-                        help='a valid coverageID or StitchedMosaic')
+                        help='a valid ID of a Coverage or a StitchedMosaic')
 
 
         # ==== DescribeEOCoverageSet parameters
@@ -855,15 +915,16 @@ def get_cmdline(args):
 ## TODO - need some check here for the the coordinates
     desceocov_parser.add_argument('--subset_lat', metavar='subset_lat', dest='subset_lat',  
                         help='Allows to constrain the request in Lat-dimensions. \
-                        The spatial constraint is expressed in WGS84. ')
+                        The spatial constraint is always expressed in WGS84. ')
 
     desceocov_parser.add_argument('--subset_lon', metavar='subset_lon', dest='subset_lon', 
-                        help='Allows to constrain the request in Lon-dimensions. \
-                        The spatial constraint is expressed in WGS84. ')
+                        help='Allows to constrain the request in Long-dimensions. \
+                        The spatial constraint is always expressed in WGS84. ')
 
-    desceocov_parser.add_argument('--subset_time', metavar='subset_Start,subset_End',  action=chk_time,
+    desceocov_parser.add_argument('--subset_time', metavar='subset_Start, subset_End',  action=chk_time,
                         help='Allows to constrain the request in Time-dimensions. The temporal \
-                        constraint is expressed in ISO-8601 (e.g. -subset_time 2007-04-05T14:30Z,2007-04-07T23:59Z). ')
+                        constraint is always expressed in ISO-8601 format and in the UTC time zone \
+                        (e.g. -subset_time 2007-04-05T14:30Z,2007-04-07T23:59Z). ')
 
     desceocov_parser.add_argument('--containment', choices=['overlaps','contains'])
 
@@ -873,8 +934,8 @@ def get_cmdline(args):
                         nargs='+', help='request one or more section(s) of a DescribeEOCoverageSet Document; NOTE: multiple sections need to \
                         be supplied within {}; [default=All]', action=cnv2str)
                         
-    desceocov_parser.add_argument('--IDs_only', dest='IDs_only', action='store_true', default=None,  help='Non standard parameter -  will \
-                        provide only a listing of the available CoverageIDs; intended to feed directly into a GetCoverage loop')
+    desceocov_parser.add_argument('--IDs_only', dest='IDs_only', action='store_true', default=None,  help='A non-standard parameter -\
+                        which will provide only a listing of the available CoverageIDs; intended to be fed directly to a GetCoverage loop')
 
 
         # ==== GetCoverage parameters
@@ -896,24 +957,23 @@ def get_cmdline(args):
                         help='location where downloaded data shall be stored [currently set to: '+temp_storage+']')
     
         # Optional parameters    
-#    getcov_parser.add_argument('-o','--output', metavar='output', dest='output', action='store', 
-#                        help='location where donwloaded data shall be stored [currently set to: '+temp_storage+']') 
-
-##TODO - solve the choice of pixel, origCRS and newCRS -- in the subset_x/subset_y
-    getcov_parser.add_argument('--subset_x', metavar='subset_x', #action=chk_coord, 
+    getcov_parser.add_argument('--subset_x', metavar='subset_x',  action=chk_coord, nargs=3, 
                         help='Trimming of coverage in X-dimension (no slicing allowed!), \
-                        either in: pixel coordinates [ x(400,200) ], coordinates without CRS (-> original projection) [ Lat(12,14) ], \
-                        coordinates with CRS (-> reprojecting) [ Long,http://www.opengis.net/def/crs/EPSG/0/4326(17,17.4) ]')
+                        Syntax: Coord-Type Axis-Label Coord,Coord; either in: pixel \
+                        coordinates [use: pix x 400,200 ], coordinates without CRS (-> original projection) [use:  orig Long 12,14 ], \
+                        or coordinates with CRS (-> reprojecting) [use:  epsg:4326 Long 17,17.4 ]')
 
-    getcov_parser.add_argument('--subset_y', metavar='subset_y', #action=chk_coord, 
+    getcov_parser.add_argument('--subset_y', metavar='subset_y',  action=chk_coord, nargs=3,
                         help='Trimming of coverage in Y-dimension (no slicing allowed!), \
-                        either in: pixel coordinates, coordinates without CRS (-> original projection), \
-                        coordinates with CRS (-> reprojecting) [ for examples, see subset_x ]')
+                        Syntax: Coord-Type Axis-Label Coord,Coord; either in: pixel \
+                        coordinates [use: pix y 400,200 ], coordinates without CRS (-> original projection) [use:  orig Lat 12,14 ], \
+                        or coordinates with CRS (-> reprojecting) [use:  epsg:4326 Lat 17,17.4 ]')
 
     getcov_parser.add_argument('--rangesubset', metavar='rangesubset', help='Subsetting in the range domain (e.g. Band-Subsetting, e.g. 3,2,1)')
 
-    getcov_parser.add_argument('--outputcrs', metavar='outputcrs', type=int,  #action=chk_CRS,
-                        help='CRS for the requested output coverage, supplied as EPSG number [default=4326]')
+    getcov_parser.add_argument('--outputcrs', metavar='outputcrs', type=int, 
+                        help='CRS for the requested output coverage, supplied as EPSG number [default=4326]. \
+                        Example: --outputcrs 3035 ')
 
     getcov_parser.add_argument('--size_x', nargs=2, action=reformat_outsize, metavar=('[size 100 |', 'resolution 15]'),
                         help='Mutually exclusive, enter either: size & integer dimension of the requested coverage or \
@@ -930,16 +990,18 @@ def get_cmdline(args):
                         help='Coverage delivered directly as image file or enclosed in GML structure \
                         [default=parameter is not provided]')
 
-    getcov_parser.add_argument('--mask', metavar='mask', help='Masking of coverage by polygon: define the polygon by a list of \
-                        points (i.e. latitude and longitude values), e.g. lat1,lon1,lat2,lon2,...; \
-                        make sure to close the polygon with the last pair of coordinates; CRS is optional; \
-                        per default EPSG 4326 is assumed; use the subset parameter to crop the resulting coverage')
+    getcov_parser.add_argument('--mask', metavar='mask', action=chk_mask, nargs='*',
+                        help='Masking of coverage by polygon: define the polygon as a list of points \
+                        (i.e. latitude and longitude values), e.g. lat1,lon1,lat2,lon2,...; make sure \
+                        to close the polygon with the last pair of coordinates; CRS is optional; per default \
+                        EPSG 4326 is assumed; use the subset parameter to crop the resulting coverage  \
+                        Syntax:  epsg:xxxx lat1,lon1,lat2,lon2, lat3,lon3,lat1,lon1 \
+                        epsg:4326 42,10,43,12,39,13,38,9,42,10' ) 
+                    #   Example: polygon,http://www.opengis.net/def/crs/EPSG/0/4326(42,10,43,12,39,13,38,9,42,10) ')
 
 
-    #input = cl_parser.parse_args(args[1:])
     input = cl_parser.parse_args()
     input_params=input.__dict__
-
    
     return input_params
     
@@ -966,8 +1028,13 @@ def main(args):
     
     wcs_call = wcsClient()
 
+
+#------
 #    from IPython import embed  
 #    embed()  
+#    sys.exit()
+#------
+
 
     exec "result = wcs_call."+to_call+"(input_params)"
     
