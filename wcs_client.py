@@ -1,13 +1,14 @@
 #!/usr/bin/env python
+
+# -*- coding: utf-8 -*-
 """
 #------------------------------------------------------------------------------
 # Name:  wcs_client.py
 #
 #   General purpose WCS 2.0/EO-WCS Client:
-#       The routine can be used from the cmd-line or imported as modules.
-#       If used at the cmd-line it provieds extensive help information.
-#       If used as modules the documentation of the functionality is provided
-#       as doc-strings.
+#       The routine is inteded to be imported as modules. 
+#       If cmd-line usage is desired the cmdline_wcs_client.py will provide it.
+#       The documentation of the modules functionality is provided as doc-strings.
 #
 #   This WCS-Client provides the following functionality:
 #         - GetCapabilities Request
@@ -67,21 +68,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#
-#
-# -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
 """
 
 import sys
 import os
 import time, datetime
-#import argparse
 import urllib2, socket
 from xml.dom import minidom
 
 global __version__
-__version__ = '0.1-beta'
+__version__ = '0.1'
 
     # check for OS Platform and set the Directory-Separator to be used
 global dsep
@@ -106,10 +102,6 @@ if temp_storage is None:
 
 
 
-
-#/************************************************************************/
-# -- starting code secton
-#/************************************************************************/
 
 #/************************************************************************/
 #/*                              wcsClient()                             */
@@ -177,7 +169,7 @@ class wcsClient(object):
 
     def _valid_time_wrapper(self, indate_list):
         """
-           wrapper function to _validate_date(),it handles the looping through
+           Wrapper function to _validate_date(),it handles the looping through
            multiple input date values
            It test if the provided date value(s) are a valid dates and are formated in ISO-8601 format
            The function  _validate_date() performs the actual testing, but this
@@ -210,7 +202,7 @@ class wcsClient(object):
 
     def _validate_date(self, indate):
         """
-            performs testing of the supplied date values (checks formats, validity, etc.)
+            Performs testing of the supplied date values (checks formats, validity, etc.)
             private function of _valid_time_wrapper(), which only handles the looping.
             _validate_date() is not intended to be called directly, only through the
             _valid_time_wrapper() function.
@@ -245,7 +237,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _set_base_request(self):
         """
-            returns the basic url components for any valid WCS request
+            Returns the basic url components for any valid WCS request
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
 
@@ -260,7 +252,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _set_base_cap(self):
         """
-            returns the basic url components for a valid GetCapabilities request
+            Returns the basic url components for a valid GetCapabilities request
         """
        # print "I'm in "+sys._getframe().f_code.co_name
 
@@ -278,7 +270,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _set_base_desccov(self):
         """
-            returns the basic urls components for a valid DescribeCoverage Request
+            Returns the basic urls components for a valid DescribeCoverage Request
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
 
@@ -294,7 +286,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _set_base_desceocoverageset(self):
         """
-            returns the basic urls components for a valid DescribeEOCoverageSet Request
+            Returns the basic urls components for a valid DescribeEOCoverageSet Request
         """
        # print "I'm in "+sys._getframe().f_code.co_name
 
@@ -318,7 +310,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _set_base_getcov(self):
         """
-            returns the basic urls components for a GetCoverage Request
+           Rreturns the basic urls components for a GetCoverage Request
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
 
@@ -563,7 +555,7 @@ class wcsClient(object):
         """
             Function to parse the request results of a DescribeEOCoverageSet
             and extract all available CoveragesIDs.
-            This function is used when the the IDs_only parameter is supplied.
+            This function is used when the the  IDs_only  parameter is supplied.
             Return:  List of available coverageIDs
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
@@ -589,7 +581,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _execute_xml_request(self, http_request, IDs_only=False):
         """
-            executes the GetCapabilities, DescribeCoverage, DescribeEOCoverageSet
+            Executes the GetCapabilities, DescribeCoverage, DescribeEOCoverageSet
             requests based on the generate http_url
             Returns:  either XML response document  or  a list of coverageIDs
             Output: prints out the submitted http_request  or Error_XML in case of failure
@@ -636,7 +628,7 @@ class wcsClient(object):
                 return err_msg
 
         return
-        #return result_xml
+
 
     #/************************************************************************/
     #/*                     _execute_getcov_request()                        */
@@ -716,7 +708,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _merge_dicts(self, input_params, procedure_dict):
         """
-            merge and harmonize the input_params-dict with the required request-dict
+            Merge and harmonize the input_params-dict with the required request-dict
             e.g. the base_getcov-dict
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
@@ -746,7 +738,7 @@ class wcsClient(object):
     #/************************************************************************/
     def _create_request(self, input_params, procedure_dict):
         """
-            create the http-request according to the user selected Request-type
+            Create the http-request according to the user selected Request-type
         """
       #  print "I'm in "+sys._getframe().f_code.co_name
 
@@ -809,9 +801,9 @@ class wcsClient(object):
 
 
 #/************************************************************************/
-####            END OF: wcs_Client class            #####                */
+# /*            END OF:        wcs_Client()                              */
 #/************************************************************************/
-#/************************************************************************/
+
 
 
 
