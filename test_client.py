@@ -95,13 +95,22 @@ else:
 #Bretagne
 #http://data.eox.at/instance00/ows?  --EOID Spot4Take5_N2A_PENTE   -a -2.7,-2.6,47.6,47.7   -t 20130211 
     input_paramsD5a = dict(request='DescribeEOCoverageSet', server_url='http://data.eox.at/instance00/ows?', eoID='Spot4Take5_N2A_PENTE', subset_lon='-2.7,-2.6', subset_lat='47.6,47.7',  subset_time='2013-02-11', IDs_only=True)
-    ./wcs_client.py  DescribeEOCoverageSet -s http://data.eox.at/instance00/ows?  --eoID  Spot4Take5_N2A_PENTE --subset_lat 47.6,47.7  --subset_lon -2.7,-2.6  --subset_time  2013-02-11  --IDs_only
+ ##   ./wcs_client.py  DescribeEOCoverageSet -s http://data.eox.at/instance00/ows?  --eoID  Spot4Take5_N2A_PENTE --subset_lat 47.6,47.7  --subset_lon -2.7,-2.6  --subset_time  2013-02-11  --IDs_only
+## NEW ==>  cmdline_wcs_client.py / wcs_client.py
+./cmdline_wcs_client.py  DescribeEOCoverageSet -s http://data.eox.at/instance00/ows?  --eoID  Spot4Take5_N2A_PENTE --subset_lat 47.6,47.7  --subset_lon -2.7,-2.6  --subset_time 2013-02-11  --IDs_only
+
+
   
 #---
   #SPOT4_HRVIR1_XS_20130211095822_N2A_PENTE
     elem=''
     input_paramsD5b = dict(request='GetCoverage', server_url='http://data.eox.at/instance00/ows?', coverageID=elem, subset_x='-2.7,-2.6', subset_y='47.6,47.7',  subset_time='', IDs_only=True)
-    ./wcs_client.py  GetCoverage  -s http://data.eox.at/instance00/ows? --coverageID   --subset_x epsg:4326 Long -2.7,-2.6  --subset_y epsg:4326  47.6,47.7   --format tiff
+##    ./wcs_client.py  GetCoverage  -s http://data.eox.at/instance00/ows? --coverageID   --subset_x epsg:4326 Long -2.7,-2.6  --subset_y Lat epsg:4326  47.6,47.7   --format tiff  --output    --coverageID   
+## NEW ==>  cmdline_wcs_client.py / wcs_client.py
+./cmdline_wcs_client.py GetCoverage -s http://data.eox.at/instance00/ows?  --subset_x epsg:4326 Long -2.7,-2.6  --subset_y epsg:4326 Lat  47.6,47.7   --format tiff --output /home/schillerc/tmp1/cryoland_tmp --coverageID   
+
+
+
 
 #
 #
@@ -119,6 +128,7 @@ else:
 ####   for copy and paste into an ipython session --> use  %cpaste
 #####################################################################################
 
+## Attention -- use %cpaste !!!
 
 import sys
 import os
