@@ -359,7 +359,7 @@ class wcsClient(object):
         """
        # print "I'm in "+sys._getframe().f_code.co_name
         print input_params
-        if input_params['updateSequence'] is not None:
+        if input_params.has_key('updateSequence') and input_params['updateSequence'] is not None:
             res_in = self._valid_time_wrapper(list(input_params.get('updateSequence').split(',')))
             input_params['updateSequence'] = ','.join(res_in)
 
@@ -620,7 +620,12 @@ class wcsClient(object):
 #                access_err.write(url_ERROR.read())
 #                access_err.flush()
 #                access_err.close()
-                print url_ERROR.read(), '\n'
+                
+                
+                try:
+                    print url_ERROR.read(), '\n'
+                except:
+                    pass
 
             elif hasattr(url_ERROR, 'code'):
                 print time.strftime("%Y-%m-%dT%H:%M:%S%Z"), "- ERROR:  The server couldn\'t fulfill the request - Code returned:  ", url_ERROR.code, url_ERROR.read()
