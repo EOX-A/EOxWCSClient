@@ -78,7 +78,7 @@ import argparse
 import wcs_client   # as wcsClient
 
 global __version__
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 
@@ -286,7 +286,7 @@ def _get_cmdline():
 
     mandatory.add_argument('--coverageID', metavar='coverageID', required=True, help='a valid coverageID')
 
-    mandatory.add_argument('--format', choices=['tiff', 'jpeg', 'png', 'gif'],
+    mandatory.add_argument('--format', choices=['tiff', 'jpeg', 'png', 'gif', 'x-netcdf'],
                         required=True, help='requested format of coverage to be returned')
 
     mandatory.add_argument('-o', '--output', metavar='output', dest='output', action='store',
@@ -320,7 +320,9 @@ def _get_cmdline():
                         help='Mutually exclusive, enter either: size & Axis-Label & integer dimension of  \
                         the requested coverage or resolution & Axis-Label & dimension of one pixel in Y-Dimension')
 
-    getcov_parser.add_argument('--interpolation', choices=['nearest', 'bilinear', 'average'],
+#    getcov_parser.add_argument('--interpolation', choices=['nearest', 'bilinear', 'average'],
+#                        help='Interpolation method to be used [default=nearest]')
+    getcov_parser.add_argument('--interpolation', metavar=['nearest', 'bilinear', 'average', 'or any other offered'],
                         help='Interpolation method to be used [default=nearest]')
 
     getcov_parser.add_argument('--mediatype', choices=['multipart/mixed'], nargs='?',
@@ -362,6 +364,9 @@ def main():
 
         # get all parameters provided via cmd-line
     input_params = _get_cmdline()
+
+    if input_params.has_key('version') is False:
+        input_params['version'] = None
 
         # execute the user selected Request-type
     if input_params.has_key('request'):
